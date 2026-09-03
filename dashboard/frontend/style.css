@@ -1,0 +1,243 @@
+/* ---------------------------------------------------------------
+   Slick & Track — design tokens
+   A maritime operations console, not a SaaS dashboard: deep chart
+   navy, hairline dividers, monospace for coordinates/data, a single
+   amber-to-red heat scale reserved for suspect confidence.
+   --------------------------------------------------------------- */
+:root {
+  --bg-deep: #0a141f;
+  --bg-panel: #101d2b;
+  --bg-panel-raised: #16293b;
+  --border: #223447;
+  --text-primary: #e7edf3;
+  --text-muted: #8298ac;
+  --text-faint: #52697d;
+
+  --accent-spill: #e2574c;
+  --accent-origin: #e8a33d;
+  --accent-track: #3d8ea8;
+  --accent-suspect: #f0b93f;
+  --accent-gap: #d65fa0;
+  --accent-high-conf: #e2574c;
+  --accent-mid-conf: #e8a33d;
+  --accent-low-conf: #3d8ea8;
+
+  --font-ui: "IBM Plex Sans", -apple-system, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  overflow: hidden;
+}
+
+/* ---------------- topbar ---------------- */
+.topbar {
+  height: 64px;
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 20px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  font-size: 22px; color: var(--accent-track);
+  line-height: 1;
+}
+.brand-text h1 {
+  font-size: 16px; font-weight: 600; margin: 0; letter-spacing: 0.2px;
+}
+.brand-text p {
+  font-size: 11.5px; color: var(--text-muted); margin: 2px 0 0;
+}
+
+.topbar-stats {
+  display: flex; gap: 24px; margin-left: 8px; flex: 1;
+  font-family: var(--font-data); font-size: 12px; color: var(--text-muted);
+}
+.topbar-stats .stat-label { color: var(--text-faint); margin-right: 6px; }
+.topbar-stats .stat-value { color: var(--text-primary); }
+.topbar-stats .stat-value.warn { color: var(--accent-origin); }
+
+.refresh-btn {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-ui); font-size: 12.5px; font-weight: 500;
+  padding: 9px 16px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.refresh-btn:hover { border-color: var(--accent-track); background: #1c3244; }
+.refresh-btn:focus-visible { outline: 2px solid var(--accent-track); outline-offset: 2px; }
+.refresh-btn.loading { opacity: 0.6; pointer-events: none; }
+
+/* ---------------- layout ---------------- */
+.layout {
+  display: flex;
+  height: calc(100% - 64px);
+}
+
+.map-wrap { position: relative; flex: 1; }
+#map { width: 100%; height: 100%; background: var(--bg-deep); }
+
+.sidebar {
+  width: 380px; flex-shrink: 0;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.sidebar-section { padding: 18px 18px 8px; }
+.detection-section { border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+.sidebar-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.sidebar-heading h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.sidebar-sub { font-family: var(--font-data); font-size: 11.5px; color: var(--text-faint); }
+
+/* ---------------- spill detection panel ---------------- */
+.upload-drop {
+  display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--border); border-radius: 3px;
+  padding: 16px 12px; cursor: pointer; text-align: center;
+  color: var(--text-muted); font-size: 12px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.upload-drop:hover { border-color: var(--accent-track); color: var(--text-primary); }
+.detection-result { margin-top: 12px; }
+.detection-result img {
+  width: 100%; border-radius: 3px; border: 1px solid var(--border); display: block;
+}
+.detection-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 10px; font-size: 11px;
+}
+.detection-stat { display: flex; flex-direction: column; gap: 2px; color: var(--text-faint); }
+.detection-stat strong { font-family: var(--font-data); font-size: 12px; color: var(--text-primary); font-weight: 500; }
+.trace-btn {
+  width: 100%; margin-top: 12px;
+  background: var(--accent-track); border: none; color: #06131c;
+  font-family: var(--font-ui); font-size: 12.5px; font-weight: 600;
+  padding: 10px; border-radius: 3px; cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.trace-btn:hover { opacity: 0.85; }
+.trace-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ---------------- suspect list ---------------- */
+.suspect-card {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px 13px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  background: var(--bg-panel-raised);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.suspect-card:hover { border-color: var(--text-faint); }
+.suspect-card:focus-visible { outline: 2px solid var(--accent-track); outline-offset: 1px; }
+.suspect-card.selected { border-color: var(--accent-suspect); background: #1e2a1a1a; }
+
+.suspect-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.suspect-rank {
+  font-family: var(--font-data); font-size: 11px; color: var(--text-faint);
+}
+.suspect-mmsi {
+  font-family: var(--font-data); font-size: 12.5px; font-weight: 500;
+}
+.suspect-type {
+  font-size: 10.5px; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 1px 6px;
+}
+
+.confidence-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.confidence-bar-track {
+  flex: 1; height: 5px; background: var(--bg-deep); border-radius: 3px; overflow: hidden;
+}
+.confidence-bar-fill { height: 100%; border-radius: 3px; }
+.confidence-pct { font-family: var(--font-data); font-size: 12.5px; min-width: 42px; text-align: right; }
+
+.score-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.score-item { text-align: center; }
+.score-item-label { font-size: 9.5px; color: var(--text-faint); margin-bottom: 3px; }
+.score-item-value { font-family: var(--font-data); font-size: 11px; color: var(--text-muted); }
+.score-item-value.flag { color: var(--accent-gap); font-weight: 600; }
+
+/* ---------------- map overlays ---------------- */
+.layer-panel, .legend {
+  position: absolute; z-index: 500;
+  background: rgba(16, 29, 43, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  backdrop-filter: blur(2px);
+}
+.layer-panel { top: 14px; left: 14px; width: 190px; }
+.layer-panel-title { font-size: 10.5px; color: var(--text-faint); margin-bottom: 7px; }
+.layer-toggle { display: flex; align-items: center; gap: 7px; padding: 3px 0; cursor: pointer; color: var(--text-muted); }
+.layer-toggle input { accent-color: var(--accent-track); }
+.layer-toggle span { font-size: 11.5px; }
+
+.legend { bottom: 14px; left: 14px; }
+.legend-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; color: var(--text-muted); font-size: 11px; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.swatch-spill { background: var(--accent-spill); }
+.swatch-origin { background: var(--accent-origin); opacity: 0.7; }
+.swatch-track { background: var(--accent-track); }
+.swatch-suspect { background: var(--accent-suspect); }
+.swatch-gap { background: var(--accent-gap); }
+
+/* ---------------- AIS gap markers ---------------- */
+.gap-marker span {
+  display: block; width: 12px; height: 12px;
+  border: 2px solid var(--accent-gap); background: var(--bg-deep);
+  transform: rotate(45deg);
+}
+.gap-marker-lost span { border-style: solid; }
+.gap-marker-reacquired span { border-style: dashed; }
+.gap-label {
+  font-family: var(--font-data); font-size: 10px; font-weight: 600;
+  color: var(--accent-gap); white-space: nowrap;
+  background: rgba(16, 29, 43, 0.85); border: 1px solid var(--accent-gap);
+  border-radius: 2px; padding: 2px 6px; transform: translate(-50%, -26px);
+  pointer-events: none;
+}
+
+/* ---------------- detail drawer ---------------- */
+.detail-drawer {
+  position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+  background: var(--bg-panel); border-left: 1px solid var(--border);
+  z-index: 1000; transition: right 0.2s ease;
+  padding: 20px; overflow-y: auto;
+}
+.detail-drawer.open { right: 0; }
+.drawer-close {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 22px; cursor: pointer; line-height: 1;
+}
+.drawer-close:hover { color: var(--text-primary); }
+
+/* ---------------- Leaflet overrides ---------------- */
+.leaflet-container { background: var(--bg-deep) !important; font-family: var(--font-ui); }
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel-raised); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 3px;
+}
+.leaflet-popup-tip { background: var(--bg-panel-raised); }
+.leaflet-popup-content { font-family: var(--font-data); font-size: 12px; margin: 10px 12px; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }

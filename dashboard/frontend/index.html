@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slick &amp; Track — Oil Spill Attribution</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">◎</span>
+    <div class="brand-text">
+      <h1>Slick &amp; Track</h1>
+      <p>Satellite oil-spill detection &amp; AIS vessel attribution</p>
+    </div>
+  </div>
+  <div class="topbar-stats" id="topbar-stats"><!-- filled by app.js --></div>
+  <button class="refresh-btn" id="refresh-btn" title="Generate a new synthetic scenario">
+    New scenario
+  </button>
+</header>
+
+<main class="layout">
+  <div class="map-wrap">
+    <div id="map"></div>
+
+    <div class="layer-panel" id="layer-panel">
+      <div class="layer-panel-title">Layers</div>
+      <label class="layer-toggle"><input type="checkbox" id="toggle-origin" checked><span>Origin cone</span></label>
+      <label class="layer-toggle"><input type="checkbox" id="toggle-forecast" checked><span>Forward drift forecast</span></label>
+      <label class="layer-toggle"><input type="checkbox" id="toggle-tracks" checked><span>Background AIS traffic</span></label>
+      <label class="layer-toggle"><input type="checkbox" id="toggle-gaps" checked><span>AIS gap markers</span></label>
+    </div>
+
+    <div class="legend" id="legend">
+      <div class="legend-row"><span class="swatch swatch-spill"></span>Detected slick</div>
+      <div class="legend-row"><span class="swatch swatch-origin"></span>Estimated origin (cone)</div>
+      <div class="legend-row"><span class="swatch swatch-track"></span>Background vessel track</div>
+      <div class="legend-row"><span class="swatch swatch-suspect"></span>Top suspect track</div>
+      <div class="legend-row"><span class="swatch swatch-gap"></span>AIS gap (signal lost/reacquired)</div>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-section detection-section">
+      <div class="sidebar-heading">
+        <h2>Spill detection</h2>
+      </div>
+      <label class="upload-drop" id="upload-drop">
+        <input type="file" id="sar-file-input" accept=".tif,.tiff" hidden>
+        <span id="upload-label">Upload SAR scene (.tif)</span>
+      </label>
+      <div id="detection-result" class="detection-result" hidden>
+        <img id="detection-overlay" alt="Detected slick overlay">
+        <div class="detection-stats">
+          <div class="detection-stat"><span>Method</span><strong id="det-method">—</strong></div>
+          <div class="detection-stat"><span>Confidence</span><strong id="det-confidence">—</strong></div>
+          <div class="detection-stat"><span>Area</span><strong id="det-area">—</strong></div>
+          <div class="detection-stat"><span>Age estimate</span><strong id="det-age">—</strong></div>
+        </div>
+        <button class="trace-btn" id="trace-btn">Trace to origin &amp; rank suspects</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-heading">
+        <h2>Suspect ranking</h2>
+        <span class="sidebar-sub" id="suspect-count">—</span>
+      </div>
+      <div class="suspect-list" id="suspect-list"><!-- filled by app.js --></div>
+    </div>
+  </aside>
+</main>
+
+<div class="detail-drawer" id="detail-drawer">
+  <button class="drawer-close" id="drawer-close">&times;</button>
+  <div id="drawer-content"><!-- filled by app.js --></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
