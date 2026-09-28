@@ -1,8 +1,10 @@
-numpy
-pandas
-scipy
 fastapi
 uvicorn
 python-multipart
+numpy
+scipy
+pandas
 rasterio
-Pillow
+pillow
+xarray
+netCDF4

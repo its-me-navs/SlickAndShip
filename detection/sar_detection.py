@@ -25,6 +25,8 @@ separately (from the SAR product's metadata / EMSA report) via
 from __future__ import annotations
 import numpy as np
 from scipy import ndimage
+import os
+from pathlib import Path
 
 try:
     import rasterio
@@ -78,24 +80,71 @@ def classical_detect(sar_db: np.ndarray, dark_percentile: float = 12.0,
     return mask, confidence
 
 
-def unet_detect(sar_2ch: np.ndarray, checkpoint_path: str, device: str = "cpu") -> tuple[np.ndarray, float]:
-    """Runs the trained U-Net (see notebooks/train_sar_segmentation.py) on a 2-channel scene."""
+_MODEL_CACHE: dict = {}
+
+
+def _load_unet(checkpoint_path: str, device: str):
+    key = (checkpoint_path, device)
+    if key not in _MODEL_CACHE:
+        import torch
+        from .unet_model import UNet
+        model = UNet(in_channels=2, out_channels=1, base=32)
+        ckpt = torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(ckpt["model_state"])
+        _MODEL_CACHE[key] = model.eval().to(device)
+    return _MODEL_CACHE[key]
+
+
+def unet_detect(sar_2ch: np.ndarray, checkpoint_path: str, device: str = "cpu",
+                tile: int = 128, stride: int = 128, batch_size: int = 16,
+                threshold: float | None = None, min_region_px: int = 150) -> tuple[np.ndarray, float]:
+    """Batched sliding-window U-Net inference over the full scene (the model
+    was trained on 128x128 crops, so it must not see the whole image at once)."""
+    import os
     import torch
-    from .unet_model import UNet
 
-    model = UNet(in_channels=2, out_channels=1)
-    ckpt = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(ckpt["model_state"])
-    model.eval().to(device)
+    if sar_2ch.ndim != 3 or sar_2ch.shape[-1] != 2:
+        raise ValueError(f"U-Net needs a 2-channel (VV+VH) scene, got shape {sar_2ch.shape}")
+    if threshold is None:
+        threshold = float(os.environ.get("UNET_THRESHOLD", "0.5"))
 
-    img = np.clip(sar_2ch, -35, 5)
-    img = (img + 35) / 40.0
-    x = torch.from_numpy(np.moveaxis(img, -1, 0)).float().unsqueeze(0).to(device)
+    model = _load_unet(checkpoint_path, device)
 
-    with torch.no_grad():
-        probs = torch.sigmoid(model(x))[0, 0].cpu().numpy()
+    img = np.nan_to_num(sar_2ch.astype(np.float32), nan=-35.0)
+    img = (np.clip(img, -35, 5) + 35) / 40.0          # same normalization as training
+    h, w = img.shape[:2]
+    if h < tile or w < tile:
+        raise ValueError(f"Scene {h}x{w} is smaller than the {tile}px tile")
 
-    mask = (probs > 0.5).astype(np.uint8)
+    x = torch.from_numpy(np.moveaxis(img, -1, 0)).float()   # (2, H, W)
+    tops = list(range(0, h - tile + 1, stride))
+    lefts = list(range(0, w - tile + 1, stride))
+    if tops[-1] != h - tile:
+        tops.append(h - tile)
+    if lefts[-1] != w - tile:
+        lefts.append(w - tile)
+    coords = [(t, l) for t in tops for l in lefts]
+
+    prob_sum = np.zeros((h, w), dtype=np.float32)
+    count = np.zeros((h, w), dtype=np.float32)
+    with torch.inference_mode():
+        for i in range(0, len(coords), batch_size):
+            chunk = coords[i:i + batch_size]
+            batch = torch.stack([x[:, t:t + tile, l:l + tile] for t, l in chunk]).to(device)
+            out = torch.sigmoid(model(batch))[:, 0].cpu().numpy()
+            for (t, l), p in zip(chunk, out):
+                prob_sum[t:t + tile, l:l + tile] += p
+                count[t:t + tile, l:l + tile] += 1
+    probs = prob_sum / np.maximum(count, 1)
+
+    mask = probs >= threshold
+    labeled, n = ndimage.label(mask)                   # drop tiny speckle blobs
+    if n:
+        sizes = ndimage.sum(mask, labeled, range(1, n + 1))
+        keep = [i + 1 for i, s in enumerate(sizes) if s >= min_region_px]
+        mask = np.isin(labeled, keep)
+    mask = mask.astype(np.uint8)
+
     confidence = float(probs[mask == 1].mean()) if mask.any() else 0.0
     return mask, confidence
 
@@ -195,15 +244,17 @@ def detect_spill(image_path: str, checkpoint_path: str | None = None,
     """
     arr, transform, crs = _read_scene(image_path)
     single_channel = arr[..., 0] if arr.ndim == 3 else arr
+    if checkpoint_path is None and os.environ.get("USE_UNET") == "1":
+        checkpoint_path = str(Path(__file__).resolve().parents[1] / "best_unet.pt")
 
     use_unet = mode == "unet" or (mode == "auto" and checkpoint_path is not None)
     if use_unet:
         try:
             mask, confidence = unet_detect(arr, checkpoint_path)
             method = "unet"
-        except (ImportError, FileNotFoundError):
+        except Exception as e:
             mask, confidence = classical_detect(single_channel)
-            method = "classical (unet unavailable — check torch install / checkpoint path)"
+            method = f"classical (unet failed: {type(e).__name__}: {e})"
     else:
         mask, confidence = classical_detect(single_channel)
         method = "classical"

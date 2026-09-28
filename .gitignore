@@ -5,3 +5,8 @@ detection/checkpoint.pt
 venv/
 *.egg-info/
 .DS_Store
+data/sar_raw/
+*.pt
+__pycache__/
+*.zip
+*.7z

@@ -16,7 +16,11 @@ labeled data to train it on.
 
 from __future__ import annotations
 import numpy as np
-from .environment import get_current as _default_current, get_wind as _default_wind
+import os
+if os.getenv("USE_REAL_ENV") == "1":
+    from .environment_real import get_current as _default_current, get_wind as _default_wind
+else:
+    from .environment import get_current as _default_current, get_wind as _default_wind
 
 WIND_DRIFT_FACTOR = 0.03       # fraction of wind speed contributing to drift
 WIND_DEFLECTION_DEG = 20.0     # Ekman deflection angle

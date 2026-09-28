@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pipeline import run_full_pipeline
 from detection.sar_detection import detect_spill
 
-CHECKPOINT_PATH = str(Path(__file__).resolve().parents[2] / "detection" / "checkpoint.pt")
+CHECKPOINT_PATH = str(Path(__file__).resolve().parents[2] / "best_unet.pt")
 
 app = FastAPI(title="Oil Spill Attribution API")
 
